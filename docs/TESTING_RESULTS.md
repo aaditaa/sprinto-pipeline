@@ -15,20 +15,38 @@ working unless it was actually run.
 | TypeScript | compiled as part of `next build` | **0 type errors** |
 | Production build | `next build` | **Fails with no env vars set** (by design — `lib/db.ts` throws immediately if `DATABASE_URL` is missing) and **succeeds** once `DATABASE_URL`/`RESEND_API_KEY`/`RESEND_FROM`/`MY_EMAIL` are set to any syntactically valid value — confirming this is a configuration requirement, not a code defect |
 
-## What could not be validated yet, and why
+## Live pipeline run (2026-11-19)
 
-These all require a credential or resource that only the account owner can supply —
-nothing here was skipped for convenience:
+With real `GEMINI_API_KEY`, `HUNTER_API_KEY` (`HUNTER_MODE=live`), a dedicated Neon
+database (`sprinto`, created fresh alongside the account's other, unrelated Postgres
+database — see "Known limitations"), and `PIPELINE_ENV=prod`:
+
+```
+python main.py stage1   # 24 feeds, 668 items fetched, 373 unique, 197 pooled after gates
+python main.py run      # Run 1: pool_size 197, batches_used 1, researched 14, qualified 5,
+                         #        stop_reason target_reached, n_drafted 5, n_dropped 2, n_flagged 7
+```
+
+This matches the shape of the original build's own demo run almost exactly (their demo
+notes record "pool 313 ... 14 researched, 5 of 5 qualified ... target_reached inside the
+first batch") — strong evidence the ported logic behaves the same way against live data,
+not just in unit tests.
+
+What the gates actually did, end to end:
+- **Dropped** Model ML and Yuno, both for `certifications: already holds SOC 2, ISO 27001 and GDPR` — correctly recognized as not needing Sprinto.
+- **Flagged** 7 companies: 6 for unresolved domains (VitusCare, Olyv, Hyphenate, FinMaq, Cent, Lissun — all one-word/ambiguous names where none of the 5 TLD guesses matched), 1 (Ant International) for `is_saas` still unknown after the agent loop chased it through 3 refetches.
+- **Qualified + drafted** 5: Griffin, Arva AI, Sprive, Pearler, CARPL.ai — each got a real Hunter-found PoC (e.g. Pearler → Nick Nicolaides, Co-Founder) and a Gemini-written, validator-passed draft on the first attempt.
+- **Auto-send fired zero times.** All 5 qualified companies had an unknown/undated audit signal, so each was `QUALIFIED (+review)` and `auto_send.skip_needs_review` (in `icp.json`) correctly held every draft for a human instead of sending — exactly the documented behavior, and exactly why the original README calls this out under "Known limitations" (sites rarely date their own signals). **No email has been sent to `MY_EMAIL` yet** — that's the one remaining step to fully satisfy the case's "a personalised cold email lands in your inbox" requirement, and it goes through the dashboard's Approve & send (or an explicit one-off `main.py send <email_id>`), not automatically.
+
+## What still hasn't been validated, and why
 
 | Not yet tested | Blocked on |
 |---|---|
-| A real pipeline run (`main.py stage1`, `main.py run`) | A `GEMINI_API_KEY` — extraction and writing are Gemini calls, there is no offline substitute for them |
-| Dashboard pages that read real data (Overview, Companies, Drafts, Loop) | A real `DATABASE_URL`. This account's Neon is Vercel-managed, so a project can't be created through the Neon API directly (`create_project` returned `action restricted; reason: organization is managed by Vercel`) — it has to be created once from the Vercel dashboard's Storage tab |
-| Every button/interaction, loading/empty/error states, responsive layout | Same — most interactions are server actions that touch Postgres; a handful of pure-UI states (command palette open/close, theme toggle, static layout at mobile/tablet/desktop widths) could still be spot-checked against a running `npm run dev` once a `DATABASE_URL` exists, even with an otherwise-empty database |
-| Sending a real email | `RESEND_API_KEY` + `MY_EMAIL` (recipient is hardcoded to this address, never the prospect, by design) |
-| Hunter live lookups | Optional — `HUNTER_MODE=mock` (the default) reads `fixtures/hunter_mock.json` and costs nothing; a `HUNTER_API_KEY` is only needed for `HUNTER_MODE=live` |
+| Dashboard pages against this real data (Overview, Companies, Drafts, Loop) | Needs a Vercel project connected to `aaditaa/sprinto-pipeline` (Root Directory `web`) with `web/.env.local`'s values set as its env vars; can otherwise be run locally with `npm run dev` right now |
+| Every button/interaction, loading/empty/error states, responsive layout | Same — can be spot-checked locally now that real data exists; a full pass still wants a running dashboard |
+| Actually sending one of the 5 held drafts | A deliberate "Approve & send" — not done automatically, since sending mail (even to your own inbox) is a send action that needs your go-ahead each time |
 | GitHub Actions-triggered runs from the dashboard | A fine-grained GitHub token (`GITHUB_DISPATCH_TOKEN`) on the new Vercel project, per the original README's "Run on domains from the web" section |
-| Production deploy | A Vercel project connected to `aaditaa/sprinto-pipeline` with Root Directory `web`, plus its own env vars (separate from the original `sprinto-outreach` deployment, which belongs to the original repo and is left untouched) |
+| Production deploy | A Vercel project connected to `aaditaa/sprinto-pipeline`, separate from the original `sprinto-outreach` deployment, which belongs to the original repo and is left untouched |
 
 ## How to finish validation once credentials are available
 
