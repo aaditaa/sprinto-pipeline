@@ -36,7 +36,14 @@ What the gates actually did, end to end:
 - **Dropped** Model ML and Yuno, both for `certifications: already holds SOC 2, ISO 27001 and GDPR` — correctly recognized as not needing Sprinto.
 - **Flagged** 7 companies: 6 for unresolved domains (VitusCare, Olyv, Hyphenate, FinMaq, Cent, Lissun — all one-word/ambiguous names where none of the 5 TLD guesses matched), 1 (Ant International) for `is_saas` still unknown after the agent loop chased it through 3 refetches.
 - **Qualified + drafted** 5: Griffin, Arva AI, Sprive, Pearler, CARPL.ai — each got a real Hunter-found PoC (e.g. Pearler → Nick Nicolaides, Co-Founder) and a Gemini-written, validator-passed draft on the first attempt.
-- **Auto-send fired zero times.** All 5 qualified companies had an unknown/undated audit signal, so each was `QUALIFIED (+review)` and `auto_send.skip_needs_review` (in `icp.json`) correctly held every draft for a human instead of sending — exactly the documented behavior, and exactly why the original README calls this out under "Known limitations" (sites rarely date their own signals). **No email has been sent to `MY_EMAIL` yet** — that's the one remaining step to fully satisfy the case's "a personalised cold email lands in your inbox" requirement, and it goes through the dashboard's Approve & send (or an explicit one-off `main.py send <email_id>`), not automatically.
+- **Auto-send fired zero times.** All 5 qualified companies had an unknown/undated audit signal, so each was `QUALIFIED (+review)` and `auto_send.skip_needs_review` (in `icp.json`) correctly held every draft for a human instead of sending — exactly the documented behavior, and exactly why the original README calls this out under "Known limitations" (sites rarely date their own signals). **No email was auto-sent** — by design. To close out the case's "a personalised cold email lands in your inbox" requirement, one draft (CARPL.ai → Vidur Mahajan, CEO, chosen for the most specifically grounded hook — it names a real enterprise partner, DeepHealth) was approved and sent with `python main.py send 5`:
+
+```
+sent email 5 to <MY_EMAIL> (resend id 01a1f49e-d7cf-7d9e-afb4-cb5b636dbc0b, edit rate 0.000)
+subject: [DRAFT for Vidur @ CARPL.ai] Series A and enterprise security reviews
+```
+
+The other 4 qualified drafts (Griffin, Arva AI, Sprive, Pearler) remain held in `emails.status = 'drafted'`, available for review/approval through the dashboard once it's running against this database.
 
 ## What still hasn't been validated, and why
 
