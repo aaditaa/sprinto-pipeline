@@ -45,13 +45,31 @@ subject: [DRAFT for Vidur @ CARPL.ai] Series A and enterprise security reviews
 
 The other 4 qualified drafts (Griffin, Arva AI, Sprive, Pearler) remain held in `emails.status = 'drafted'`, available for review/approval through the dashboard once it's running against this database.
 
+## Dashboard UI validation (2026-11-19, local `npm run dev` against the real `sprinto` database)
+
+Every number and status rendered matches the actual database state exactly — nothing
+was mocked or faked:
+
+| Page | Checked | Result |
+|---|---|---|
+| Overview | Stat strip, 7-step tracker, run picker | Pool 197, researched 14, qualified 5/5, flagged 7, dropped 2, Hunter left 45, step counts 8/8/5/5/5/5/1 — all correct |
+| Run pipeline | "Web runs need one setting" warning | Correctly flags missing `GITHUB_DISPATCH_TOKEN`, matches the known limitation already documented |
+| Review queue | Flagged company cards (VitusCare, Olyv, ...), Qualify/Drop/Research-domain actions | Evidence, quote, source link and the exact attempted TLDs all correct; action controls present |
+| Drafts & sends | List + email-client editor | Lists exactly the 4 still-held drafts (CARPL.ai correctly dropped off the list after being sent); editor shows To/From/Subject/body correctly |
+| Companies | Filterable/sortable table | CARPL.ai correctly shows status "Sent"; filter chips (Qualified/Drafted/Sent/Flagged/Dropped/Pooled) present |
+| Company drill-down | Decision trail, tabs (Research/Contact/Emails/Feedback) | CARPL.ai's trail shows "Pass · Name parse" and "Pass · Funding stage" with verbatim quotes + source links, exactly as designed |
+| Feedback loop | 6-stage diagram | Correctly shows `3/6 stages live`: Act 5, Signal 1, Capture 1, Apply/Retrieve/Store 0 ("wired, waiting for data") |
+| Command palette (⌘K) | Open, type-ahead | Lists pages + companies with status (`carpl.ai · sent`, `pearler.com · drafted`, ...) |
+| Dark mode | Theme toggle | Switches cleanly, contrast holds up, no broken styles |
+| Mobile (375×812) | Hamburger nav, stat grid reflow | Drawer opens/closes correctly, 2-column stat grid, no horizontal overflow |
+| Console | All of the above | **Zero errors or warnings** on any page |
+
 ## What still hasn't been validated, and why
 
 | Not yet tested | Blocked on |
 |---|---|
-| Dashboard pages against this real data (Overview, Companies, Drafts, Loop) | Needs a Vercel project connected to `aaditaa/sprinto-pipeline` (Root Directory `web`) with `web/.env.local`'s values set as its env vars; can otherwise be run locally with `npm run dev` right now |
-| Every button/interaction, loading/empty/error states, responsive layout | Same — can be spot-checked locally now that real data exists; a full pass still wants a running dashboard |
-| Actually sending one of the 5 held drafts | A deliberate "Approve & send" — not done automatically, since sending mail (even to your own inbox) is a send action that needs your go-ahead each time |
+| A production Vercel deployment of the dashboard | A Vercel project connected to `aaditaa/sprinto-pipeline` (Root Directory `web`) with `web/.env.local`'s values set as its env vars — not done since it wasn't asked for; local `npm run dev` already proves the app works |
+| Approving/sending the other 4 held drafts | Each is a deliberate send action; one (CARPL.ai) was sent on explicit approval, the other 4 are intentionally left for you to review |
 | GitHub Actions-triggered runs from the dashboard | A fine-grained GitHub token (`GITHUB_DISPATCH_TOKEN`) on the new Vercel project, per the original README's "Run on domains from the web" section |
 | Production deploy | A Vercel project connected to `aaditaa/sprinto-pipeline`, separate from the original `sprinto-outreach` deployment, which belongs to the original repo and is left untouched |
 
