@@ -8,10 +8,11 @@ for what has and hasn't been validated in this copy (short version: all 117 pipe
 tests and the web lint/typecheck/build pass; live runs need your own API keys and a
 database — nothing has been faked to look otherwise).
 
-**Live dashboard:** not yet deployed from this repo. (The URL below is the original
-build's own Vercel deployment, kept only because the rest of this README still
-describes it; this copy needs its own `vercel link` / project before that line is true
-here too.) ~~https://sprinto-outreach-delta.vercel.app~~
+**Live dashboard:** https://sprinto-pipeline-iota.vercel.app — deployed from this repo
+(`aaditaavashisht15-7741s-projects/sprinto-pipeline` on Vercel), reading the dedicated
+`sprinto` Neon database this copy uses. Deployed via the Vercel CLI directly (not
+git-connected yet — the Vercel GitHub App needs to be authorized for this repo first;
+until then, redeploy with `cd web && vercel --prod` after a push).
 
 This pipeline finds recently funded SaaS companies, works out which ones need Sprinto, picks the right person to contact, and drafts a personalised cold email. A human approves each email before it is sent. Every decision (why this company, why this person, why this email) can be traced to evidence stored in Neon: a verbatim quote, its source URL and a date.
 
