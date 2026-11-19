@@ -1,6 +1,17 @@
 # Sprinto cold outreach pipeline
 
-**Live dashboard:** https://sprinto-outreach-delta.vercel.app
+Independent copy of the MESA PGP Term 2 — AI Case 2 build, maintained in this repo
+(`aaditaa/sprinto-pipeline`). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
+system design, [docs/COMPONENT_INVENTORY.md](docs/COMPONENT_INVENTORY.md) for every
+module/component and what it does, and [docs/TESTING_RESULTS.md](docs/TESTING_RESULTS.md)
+for what has and hasn't been validated in this copy (short version: all 117 pipeline
+tests and the web lint/typecheck/build pass; live runs need your own API keys and a
+database — nothing has been faked to look otherwise).
+
+**Live dashboard:** not yet deployed from this repo. (The URL below is the original
+build's own Vercel deployment, kept only because the rest of this README still
+describes it; this copy needs its own `vercel link` / project before that line is true
+here too.) ~~https://sprinto-outreach-delta.vercel.app~~
 
 This pipeline finds recently funded SaaS companies, works out which ones need Sprinto, picks the right person to contact, and drafts a personalised cold email. A human approves each email before it is sent. Every decision (why this company, why this person, why this email) can be traced to evidence stored in Neon: a verbatim quote, its source URL and a date.
 
